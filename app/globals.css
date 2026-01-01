@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+/* 芝士AI吃鱼 - Design System Variables (Dify Style) */
+:root {
+  /* 背景色系 - 干净清爽 */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #FAFAF9;
+  --bg-tertiary: #F5F5F4;
+  --bg-card: #FFFFFF;
+  --bg-hover: #FDFDFD;
+
+  /* 文字色系 */
+  --text-primary: #09090B;
+  --text-secondary: #71717A;
+  --text-muted: #A1A1AA;
+
+  /* Dify 风格 - 终端绿作为强调色 */
+  --primary: #00D084;
+  --primary-hover: #00B872;
+  --primary-light: #E6F7F1;
+  --primary-dark: #00A86B;
+
+  /* 结构线颜色 */
+  --border-light: #E4E4E7;
+  --border-medium: #D4D4D8;
+  --border-dark: #A1A1AA;
+
+  /* 语义化颜色 */
+  --success: #00D084;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+
+  /* 阴影 - 更轻量 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.08);
+
+  /* 间距系统 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 64px;
+
+  /* 圆角 - 更小的圆角强调结构 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+@theme inline {
+  /* 颜色映射 - Dify 风格 */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-primary: var(--primary);
+  --color-border: var(--border-light);
+
+  /* 字体映射 - 现代无衬线字体 */
+  --font-sans: var(--font-manrope), var(--font-noto-sans-sc), system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-noto-sans-sc), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-manrope), var(--font-noto-sans-sc), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 结构线风格 - 强调边框 */
+.bento-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.bento-card:hover {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-md);
+}
+
+/* 自定义动画 - 更流畅 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+.animate-slide-in {
+  animation: slide-in-right 0.25s ease-out;
+}
+
+.animate-slide-out {
+  animation: slide-out-right 0.25s ease-in forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Toast 专属动画 - 更流畅 */
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.96);
+  }
+}
+
+.animate-toast-enter {
+  animation: toast-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-toast-exit {
+  animation: toast-exit 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 优化滚动体验 */
+* {
+  scroll-behavior: smooth;
+}
+
+/* 焦点可见性优化 - 使用终端绿 */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* 按钮基础样式 */
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  border-color: var(--border-medium);
+  background: var(--bg-hover);
+}
+
+/* 暗黑模式 */
+.dark {
+  /* 背景色系 */
+  --bg-primary: #09090B;
+  --bg-secondary: #18181B;
+  --bg-tertiary: #27272A;
+  --bg-card: #18181B;
+  --bg-hover: #27272A;
+
+  /* 文字色系 */
+  --text-primary: #FAFAF9;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+
+  /* 强调色（暗黑模式下更亮） */
+  --primary: #10B981;
+  --primary-hover: #34D399;
+  --primary-light: #064E3B;
+  --primary-dark: #059669;
+
+  /* 结构线颜色 */
+  --border-light: #27272A;
+  --border-medium: #3F3F46;
+  --border-dark: #52525B;
+
+  /* 阴影 - 暗黑模式下更浅 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.5);
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "user-1767062602362",
+    "email": "646184101@qq.com",
+    "username": "wwlsm",
+    "password": "Zl161829@@",
+    "createdAt": "2025-12-30T02:43:22.362Z"
+  },
+  {
+    "id": "user-1767143405171",
+    "email": "admin@example.com",
+    "username": "admin",
+    "password": "Zl161829@@",
+    "createdAt": "2025-12-31T01:10:05.171Z"
+  },
+  {
+    "id": "user-1767144458675",
+    "email": "admin@manga-reader.com",
+    "username": "manga",
+    "password": "Zl161829@@",
+    "createdAt": "2025-12-31T01:27:38.675Z"
+  }
+]

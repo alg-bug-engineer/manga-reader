@@ -1,0 +1,29 @@
+{
+  "comment-1767064309613-4ygvvrc71": {
+    "id": "comment-1767064309613-4ygvvrc71",
+    "mangaId": "manga-1",
+    "userId": "user-1767062602362",
+    "username": "wwlsm",
+    "content": "等等",
+    "createdAt": "2025-12-30T03:11:49.613Z",
+    "likes": 3
+  },
+  "comment-1767064317527-xva72dmkp": {
+    "id": "comment-1767064317527-xva72dmkp",
+    "mangaId": "manga-1",
+    "userId": "user-1767062602362",
+    "username": "wwlsm",
+    "content": "对对对",
+    "createdAt": "2025-12-30T03:11:57.527Z",
+    "likes": 0
+  },
+  "comment-1767064532089-knzjnf61z": {
+    "id": "comment-1767064532089-knzjnf61z",
+    "mangaId": "manga-2",
+    "userId": "user-1767062602362",
+    "username": "wwlsm",
+    "content": "等等",
+    "createdAt": "2025-12-30T03:15:32.089Z",
+    "likes": 0
+  }
+}
