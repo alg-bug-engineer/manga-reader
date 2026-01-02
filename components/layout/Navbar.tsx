@@ -70,9 +70,15 @@ export default function Navbar() {
                       <div className="font-medium text-zinc-900 dark:text-zinc-100">{user.username}</div>
                       <div className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</div>
                     </Link>
+                    <Link
+                      href="/profile"
+                      className="px-4 py-2 text-sm bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-md font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+                    >
+                      书架
+                    </Link>
                     <button
                       onClick={logout}
-                      className="px-3 py-2 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition font-medium"
+                      className="px-3 py-2 text-sm bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-700 transition font-medium"
                     >
                       登出
                     </button>
@@ -120,30 +126,21 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block py-3 text-zinc-900 dark:text-zinc-100 font-medium text-lg border-b border-zinc-100 dark:border-zinc-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                 >
-                  🏠 首页
+                  首页
                 </Link>
-                {/* 生成漫画功能已暂时隐藏
-                <Link
-                  href="/generate-comic"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block py-3 text-zinc-900 dark:text-zinc-100 font-medium text-lg border-b border-zinc-100 dark:border-zinc-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-                >
-                  ⚡ 生成漫画
-                </Link>
-                */}
                 <Link
                   href="/#latest"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block py-3 text-zinc-700 dark:text-zinc-300 font-medium hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                 >
-                  📖 最新更新
+                  最新更新
                 </Link>
                 <Link
                   href="/#popular"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block py-3 text-zinc-700 dark:text-zinc-300 font-medium hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                 >
-                  ⭐ 人气推荐
+                  人气推荐
                 </Link>
               </div>
 
@@ -159,13 +156,23 @@ export default function Navbar() {
                       <div className="text-sm text-zinc-500 dark:text-zinc-400">{user.email}</div>
                     </div>
 
-                    {/* 用户中心链接 */}
+                    {/* 我的收藏链接 */}
                     <Link
                       href={`/user/${user.id}`}
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center justify-between py-3 text-zinc-700 dark:text-zinc-300 font-medium hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                     >
-                      <span>👤 个人中心</span>
+                      <span>我的收藏</span>
+                      <span>→</span>
+                    </Link>
+
+                    {/* 书架管理链接 */}
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-between py-3 text-zinc-700 dark:text-zinc-300 font-medium hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                    >
+                      <span>书架管理</span>
                       <span>→</span>
                     </Link>
 

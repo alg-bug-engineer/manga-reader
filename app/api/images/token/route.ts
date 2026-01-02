@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getSessionUserId, findUserById } from '@/lib/storage';
 import { generateImageToken } from '@/lib/security/crypto';
-import { checkRateLimit, IMAGE_RATE_LIMITS } from '@/lib/security/rateLimiter';
+import { checkRateLimit, IMAGE_TOKEN_RATE_LIMITS } from '@/lib/security/rateLimiter';
 import { getClientIp, logSecurity, logSuspiciousActivity } from '@/lib/security/logger';
 
 /**
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const clientIp = getClientIp(request);
 
     // 频率限制检查
-    const rateLimit = checkRateLimit(`image-token:${clientIp}`, IMAGE_RATE_LIMITS);
+    const rateLimit = checkRateLimit(`image-token:${clientIp}`, IMAGE_TOKEN_RATE_LIMITS);
     if (!rateLimit.allowed) {
       logSuspiciousActivity(
         request,
@@ -74,12 +74,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 移除 /api/images/ 前缀（如果存在），确保使用相对路径
+    const cleanImagePath = imagePath.replace(/^\/api\/images\//, '');
+
     // 安全检查:防止路径遍历
-    if (imagePath.includes('..')) {
+    if (cleanImagePath.includes('..')) {
       logSuspiciousActivity(
         request,
         'path_traversal_attempt',
-        { imagePath },
+        { imagePath: cleanImagePath },
         'critical',
         userId
       );
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 生成图片访问令牌(5分钟有效期)
-    const token = generateImageToken(userId, imagePath, 5 * 60 * 1000);
+    const token = generateImageToken(userId, cleanImagePath, 5 * 60 * 1000);
 
     // 记录令牌生成
     logSecurity({

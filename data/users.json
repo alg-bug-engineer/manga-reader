@@ -3,7 +3,7 @@
     "id": "user-1767062602362",
     "email": "646184101@qq.com",
     "username": "wwlsm",
-    "password": "Zl161829@@",
+    "password": "$2b$10$hFV/fzYNIF26G9Q6Rt5KNuf82UXRtvT3kJ6ScptJ6idq5mk/Nfg8y",
     "createdAt": "2025-12-30T02:43:22.362Z"
   },
   {
@@ -17,7 +17,7 @@
     "id": "user-1767144458675",
     "email": "admin@manga-reader.com",
     "username": "manga",
-    "password": "Zl161829@@",
+    "password": "$2b$10$eHyE9MP14wBQakGS2sZoh.wqsg1cvKwAJTf5IIA1yOHmoSlvNc4nu",
     "createdAt": "2025-12-31T01:27:38.675Z"
   }
 ]

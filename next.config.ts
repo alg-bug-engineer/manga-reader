@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 明确指定 Turbopack 根目录，避免工作区警告
+  turbopack: {
+    root: __dirname,
+  },
   images: {
     remotePatterns: [
       {

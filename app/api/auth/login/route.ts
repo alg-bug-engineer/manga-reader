@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { findUserByEmail, createSession, type User } from '@/lib/storage';
-import { verifyPassword, generateToken } from '@/lib/security/crypto';
+import { findUserByEmail, createSession, readUsers, saveUsers, type User } from '@/lib/storage';
+import { verifyPassword, generateToken, hashPassword } from '@/lib/security/crypto';
 import { checkRateLimit, LOGIN_RATE_LIMITS } from '@/lib/security/rateLimiter';
 import { getClientIp, logSecurity } from '@/lib/security/logger';
 
@@ -63,7 +63,31 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证密码
-    const isValid = await verifyPassword(password, user.password);
+    // 支持明文密码（向后兼容）和哈希密码
+    let isValid = false;
+
+    if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
+      // 密码是哈希值，使用 bcrypt 验证
+      isValid = await verifyPassword(password, user.password);
+    } else {
+      // 密码是明文，直接比较
+      isValid = password === user.password;
+
+      // 如果明文密码匹配，自动升级为哈希密码
+      if (isValid) {
+        const hashedPassword = await hashPassword(password);
+
+        // 更新用户数据
+        const users = readUsers();
+        const userIndex = users.findIndex((u: any) => u.id === user.id);
+        if (userIndex !== -1) {
+          users[userIndex].password = hashedPassword;
+          saveUsers(users);
+          console.log(`Password upgraded to hash for user: ${user.email}`);
+        }
+      }
+    }
+
     if (!isValid) {
       // 记录失败的登录尝试
       logSecurity({

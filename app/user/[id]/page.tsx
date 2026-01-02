@@ -136,6 +136,18 @@ export default function UserPage() {
                 </p>
               </div>
 
+              {/* 操作按钮（仅自己的主页显示） */}
+              {isOwnProfile && (
+                <div className="flex gap-3">
+                  <Link
+                    href="/profile"
+                    className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+                  >
+                    个人中心
+                  </Link>
+                </div>
+              )}
+
               {/* 统计信息 */}
               <div className="flex gap-8">
                 <div className="text-center">

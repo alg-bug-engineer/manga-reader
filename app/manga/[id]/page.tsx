@@ -23,6 +23,8 @@ export default function MangaDetailPage({
   const [commentCount, setCommentCount] = useState(0);
   const [selectedTab, setSelectedTab] = useState<'chapters' | 'comments' | 'info'>('chapters');
   const [isFavoriting, setIsFavoriting] = useState(false); // 添加loading状态
+  const [inBookshelf, setInBookshelf] = useState(false);
+  const [isTogglingBookshelf, setIsTogglingBookshelf] = useState(false);
 
   React.useEffect(() => {
     params.then(p => setId(p.id));
@@ -56,6 +58,20 @@ export default function MangaDetailPage({
           }
         })
         .catch(() => setIsFavorited(false));
+    }
+  }, [user, id]);
+
+  // 检查书架状态
+  useEffect(() => {
+    if (user && id) {
+      fetch(`/api/bookshelf/check?mangaId=${id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success !== undefined) {
+            setInBookshelf(data.inBookshelf);
+          }
+        })
+        .catch(() => setInBookshelf(false));
     }
   }, [user, id]);
 
@@ -110,6 +126,49 @@ export default function MangaDetailPage({
       toast.error('操作失败', 2000);
     } finally {
       setIsFavoriting(false); // 结束loading
+    }
+  };
+
+  const handleBookshelfToggle = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (!id || !manga) return;
+
+    // 防止重复点击
+    if (isTogglingBookshelf) return;
+
+    setIsTogglingBookshelf(true);
+
+    try {
+      const response = await fetch('/api/bookshelf/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mangaId: id,
+          mangaTitle: manga.title,
+          mangaCover: manga.coverImage,
+          author: manga.author,
+          action: 'toggle',
+          status: 'reading',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setInBookshelf(data.inBookshelf);
+        toast.success(data.inBookshelf ? '已添加到书架' : '已从书架移除', 2000);
+      } else {
+        toast.error(data.error || '操作失败', 2000);
+      }
+    } catch (error) {
+      console.error('Toggle bookshelf error:', error);
+      toast.error('操作失败', 2000);
+    } finally {
+      setIsTogglingBookshelf(false);
     }
   };
 
@@ -285,13 +344,37 @@ export default function MangaDetailPage({
                   )}
                 </button>
                 <button
+                  onClick={handleBookshelfToggle}
+                  disabled={isTogglingBookshelf}
+                  className={`px-6 py-3 border-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    isTogglingBookshelf
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                  } ${
+                    inBookshelf
+                      ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white hover:bg-gray-800 dark:hover:bg-gray-100'
+                      : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {isTogglingBookshelf ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>处理中...</span>
+                    </>
+                  ) : (
+                    <span>{inBookshelf ? '已添加' : '加入书架'}</span>
+                  )}
+                </button>
+                <button
                   onClick={() => {
                     setSelectedTab('comments');
                     setShowComments(true);
                   }}
-                  className="px-6 py-3 border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-xl font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all flex items-center gap-2"
+                  className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all flex items-center gap-2"
                 >
-                  <span>💬</span>
                   <span>评论 ({commentCount})</span>
                 </button>
                 <button
@@ -304,9 +387,8 @@ export default function MangaDetailPage({
                       });
                     }
                   }}
-                  className="px-6 py-3 border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-xl font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all flex items-center gap-2"
+                  className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all flex items-center gap-2"
                 >
-                  <span>🔗</span>
                   <span>分享</span>
                 </button>
               </div>

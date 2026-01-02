@@ -173,7 +173,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm"
+                      className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm text-zinc-900"
                       placeholder="请输入注册时的邮箱"
                     />
                   </div>
@@ -214,7 +214,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                       value={resetToken}
                       onChange={(e) => setResetToken(e.target.value)}
                       required
-                      className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-mono text-sm"
+                      className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-mono text-sm text-zinc-900"
                       placeholder="请输入重置令牌"
                     />
                   </div>
@@ -229,7 +229,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
                       minLength={6}
-                      className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm"
+                      className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm text-zinc-900"
                       placeholder="请输入新密码（至少6位）"
                     />
                   </div>
@@ -267,7 +267,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm text-zinc-900"
                   placeholder="your@email.com"
                 />
               </div>
@@ -282,7 +282,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm"
+                    className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm text-zinc-900"
                     placeholder="请输入用户名"
                   />
                 </div>
@@ -298,7 +298,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm"
+                  className="w-full px-3 py-2.5 border border-zinc-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-sm text-zinc-900"
                   placeholder="请输入密码（至少6位）"
                 />
               </div>

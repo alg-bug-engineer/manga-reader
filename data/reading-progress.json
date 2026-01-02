@@ -1,0 +1,54 @@
+[
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-2",
+    "mangaTitle": "RAG外挂拯救智商记",
+    "currentChapter": 1,
+    "currentPage": 1,
+    "totalPages": 8,
+    "progressPercentage": 13,
+    "isCompleted": false,
+    "readTime": 3,
+    "id": "1767345409482-m59y8soj4",
+    "lastReadAt": "2026-01-02T10:32:13.666Z"
+  },
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-5",
+    "mangaTitle": "什么是智能体",
+    "currentChapter": 1,
+    "currentPage": 1,
+    "totalPages": 9,
+    "progressPercentage": 11,
+    "isCompleted": false,
+    "readTime": 3,
+    "id": "1767347044200-p3tonai1f",
+    "lastReadAt": "2026-01-02T10:46:09.411Z"
+  },
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-8",
+    "mangaTitle": "智能体历史",
+    "currentChapter": 1,
+    "currentPage": 1,
+    "totalPages": 9,
+    "progressPercentage": 11,
+    "isCompleted": false,
+    "readTime": 3,
+    "id": "1767347053974-6rc5j6ne6",
+    "lastReadAt": "2026-01-02T10:36:30.006Z"
+  },
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-7",
+    "mangaTitle": "强化学习求生记",
+    "currentChapter": 1,
+    "currentPage": 1,
+    "totalPages": 5,
+    "progressPercentage": 20,
+    "isCompleted": false,
+    "readTime": 3,
+    "id": "1767350787152-ap0se3iq9",
+    "lastReadAt": "2026-01-02T10:46:27.152Z"
+  }
+]

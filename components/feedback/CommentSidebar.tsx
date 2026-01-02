@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useToast } from '@/lib/contexts/ToastContext';
-import AuthModal from './AuthModal';
 
 interface Comment {
   id: string;
+  mangaId: string;
   userId: string;
   username: string;
   content: string;
@@ -16,95 +16,80 @@ interface Comment {
 
 interface CommentSidebarProps {
   mangaId: string;
-  chapterId?: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function CommentSidebar({ mangaId, chapterId, isOpen, onClose }: CommentSidebarProps) {
+export default function CommentSidebar({ mangaId, isOpen, onClose }: CommentSidebarProps) {
   const { user } = useAuth();
   const toast = useToast();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // 加载评论
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && mangaId) {
       loadComments();
     }
-  }, [isOpen, mangaId, chapterId]);
+  }, [isOpen, mangaId]);
 
   const loadComments = async () => {
+    setLoading(true);
     try {
-      const url = chapterId
-        ? `/api/comments?mangaId=${mangaId}&chapterId=${chapterId}`
-        : `/api/comments?mangaId=${mangaId}`;
-
-      const response = await fetch(url);
+      const response = await fetch(`/api/comments?mangaId=${mangaId}`);
       const data = await response.json();
 
       if (data.success) {
-        setComments(data.comments);
+        setComments(data.comments || []);
       }
     } catch (error) {
       console.error('Failed to load comments:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!user) {
-      setShowAuthModal(true);
+      toast.error('请先登录', 2000);
       return;
     }
 
     if (!newComment.trim()) {
+      toast.error('评论内容不能为空', 2000);
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
+
     try {
       const response = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mangaId,
-          chapterId,
-          content: newComment.trim(),
+          content: newComment,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
+        toast.success('评论发表成功', 2000);
         setNewComment('');
         loadComments(); // 重新加载评论
-        toast.success('评论发表成功！');
       } else {
-        toast.error(data.error || '发表失败');
+        toast.error(data.error || '发表失败', 2000);
       }
     } catch (error) {
-      console.error('Failed to post comment:', error);
-      toast.error('发表失败，请重试');
+      console.error('Failed to submit comment:', error);
+      toast.error('发表失败', 2000);
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLike = async (commentId: string) => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    try {
-      await fetch(`/api/comments/${commentId}/like`, { method: 'POST' });
-      loadComments(); // 重新加载评论
-      toast.success('点赞成功！');
-    } catch (error) {
-      console.error('Failed to like comment:', error);
-      toast.error('点赞失败');
+      setSubmitting(false);
     }
   };
 
@@ -114,65 +99,68 @@ export default function CommentSidebar({ mangaId, chapterId, isOpen, onClose }: 
     <>
       {/* 遮罩层 */}
       <div
-        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity"
         onClick={onClose}
       />
 
       {/* 侧边栏 */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform transition-transform">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-stone-200">
-            <h2 className="text-xl font-bold text-stone-900 font-display">
-              💬 评论 ({comments.length})
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-stone-400 hover:text-stone-600 transition-colors text-2xl"
-            >
-              ✕
-            </button>
-          </div>
+      <div className="fixed right-0 top-0 h-full w-full md:w-[480px] bg-white dark:bg-zinc-800 shadow-2xl z-50 transform transition-transform">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-white font-display">
+            评论区 ({comments.length})
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition-colors text-2xl"
+          >
+            ✕
+          </button>
+        </div>
 
+        {/* Content */}
+        <div className="h-[calc(100%-80px)] flex flex-col">
           {/* 评论列表 */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {comments.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">💬</div>
-                <p className="text-stone-500">还没有评论，快来抢沙发吧！</p>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="text-center py-12 text-zinc-500 dark:text-zinc-400">
+                <p className="text-lg mb-2">还没有评论</p>
+                <p className="text-sm">快来发表第一条评论吧！</p>
               </div>
             ) : (
               comments.map((comment) => (
                 <div
                   key={comment.id}
-                  className="bg-stone-50 rounded-xl p-4 border border-stone-200"
+                  className="bg-zinc-50 dark:bg-zinc-700/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-700"
                 >
-                  <div className="flex items-start justify-between mb-2">
+                  {/* 用户信息 */}
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
                         {comment.username.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <div className="font-medium text-stone-900 text-sm">
-                          {comment.username}
-                        </div>
-                        <div className="text-xs text-stone-500">
-                          {new Date(comment.createdAt).toLocaleDateString('zh-CN')}
-                        </div>
-                      </div>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                        {comment.username}
+                      </span>
                     </div>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {new Date(comment.createdAt).toLocaleString('zh-CN')}
+                    </span>
                   </div>
-                  <p className="text-stone-700 text-sm leading-relaxed mb-3">
+
+                  {/* 评论内容 */}
+                  <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
                     {comment.content}
                   </p>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleLike(comment.id)}
-                      className="flex items-center gap-1 text-sm text-stone-500 hover:text-violet-600 transition"
-                    >
-                      <span>👍</span>
-                      <span>{comment.likes}</span>
-                    </button>
+
+                  {/* 点赞数 */}
+                  <div className="mt-3 flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400">
+                    <span>❤️</span>
+                    <span>{comment.likes}</span>
                   </div>
                 </div>
               ))
@@ -180,44 +168,36 @@ export default function CommentSidebar({ mangaId, chapterId, isOpen, onClose }: 
           </div>
 
           {/* 输入框 */}
-          <div className="p-6 border-t border-stone-200 bg-stone-50">
-            {!user && (
-              <div className="mb-4 p-4 bg-violet-50 border border-violet-200 rounded-lg text-center">
-                <p className="text-violet-700 text-sm mb-2">登录后可以发表评论</p>
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="text-violet-600 hover:text-violet-700 font-medium text-sm underline"
-                >
-                  前往登录 →
-                </button>
-              </div>
-            )}
-            <div className="flex gap-2">
+          <div className="border-t border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50 dark:bg-zinc-900">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder={user ? "说点什么..." : "请先登录"}
-                disabled={!user || loading}
-                className="flex-1 px-4 py-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none disabled:bg-stone-100 disabled:cursor-not-allowed transition"
+                placeholder={user ? '发表你的看法...' : '请先登录后发表评论'}
+                disabled={!user || submitting}
                 rows={3}
+                className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition resize-none bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              <button
-                onClick={handleSubmit}
-                disabled={!user || !newComment.trim() || loading}
-                className="px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed self-end"
-              >
-                发送
-              </button>
-            </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={!user || submitting || !newComment.trim()}
+                  className="px-6 py-2.5 bg-emerald-600 dark:bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>发表中...</span>
+                    </>
+                  ) : (
+                    <span>发表评论</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        defaultTab="login"
-      />
     </>
   );
 }

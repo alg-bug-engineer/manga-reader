@@ -3,10 +3,18 @@
     "user-1767062602362": [
       "manga-1",
       "manga-2"
+    ],
+    "user-1767144458675": [
+      "manga-4",
+      "manga-5",
+      "manga-8"
     ]
   },
   "counts": {
     "manga-2": 1,
-    "manga-1": 1
+    "manga-1": 1,
+    "manga-4": 1,
+    "manga-5": 1,
+    "manga-8": 1
   }
 }
