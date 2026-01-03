@@ -38,30 +38,23 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session');
 
-    if (!sessionCookie) {
-      logSuspiciousActivity(request, 'image_token_no_session', {}, 'warning');
+    let userId: string | null = null;
 
-      return NextResponse.json(
-        { success: false, error: '请先登录' },
-        { status: 401 }
-      );
+    if (sessionCookie) {
+      userId = getSessionUserId(sessionCookie.value);
+
+      if (userId) {
+        const user = findUserById(userId);
+        if (!user) {
+          userId = null; // 用户不存在，当作未登录处理
+        }
+      }
     }
 
-    const userId = getSessionUserId(sessionCookie.value);
-
+    // 未登录用户也可以获取 token（用于浏览主页）
+    // 使用一个特殊的匿名用户ID
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: '登录已过期,请重新登录' },
-        { status: 401 }
-      );
-    }
-
-    const user = findUserById(userId);
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: '用户不存在' },
-        { status: 401 }
-      );
+      userId = 'anonymous';
     }
 
     // 获取请求的图片路径

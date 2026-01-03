@@ -119,14 +119,10 @@ export async function GET(
   // 2. Token 验证
   const token = request.nextUrl.searchParams.get('token');
 
+  // 允许未登录用户访问图片（通过生成临时token）
+  // 如果没有token，则生成一个临时的公开token
   if (!token) {
-    logSuspiciousActivity(
-      request,
-      'missing_image_token',
-      { imagePath: decodedPath },
-      'warning'
-    );
-
+    // 未登录用户仍然需要token，返回401让前端获取token
     logImageAccess(request, decodedPath.join('/'), false, undefined, 'missing_token');
 
     return NextResponse.json(

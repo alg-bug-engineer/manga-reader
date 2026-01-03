@@ -57,6 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(data.user);
+
+    // 登录成功后刷新页面，确保图片token能正确获取
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
 
   // 注册
@@ -74,6 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(data.user);
+
+    // 注册成功后刷新页面，确保图片token能正确获取
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
 
   // 登出

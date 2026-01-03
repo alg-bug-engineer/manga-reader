@@ -18,6 +18,7 @@ export default function MangaDetailPage({
   const [id, setId] = React.useState<string | null>(null);
   const [showComments, setShowComments] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [currentViews, setCurrentViews] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
@@ -92,6 +93,14 @@ export default function MangaDetailPage({
         .catch(() => setCommentCount(0));
     }
   }, [id]);
+
+  // 检查登录状态 - 如果未登录则显示提示
+  useEffect(() => {
+    if (manga && !user) {
+      // 未登录用户可以浏览详情页，但点击阅读时会提示登录
+      setShowLoginPrompt(true);
+    }
+  }, [manga, user]);
 
   const handleFavorite = async () => {
     if (!user) {
@@ -222,6 +231,42 @@ export default function MangaDetailPage({
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 bg-gradient-to-b from-slate-50 dark:from-zinc-900 to-white dark:to-zinc-900 min-h-screen">
+        {/* 未登录提示横幅 */}
+        {showLoginPrompt && !user && (
+          <div className="mb-6 bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-6 shadow-sm">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="text-3xl">💡</div>
+                <div>
+                  <h3 className="font-semibold text-amber-900 dark:text-amber-100 text-lg mb-1">
+                    想要阅读完整内容？
+                  </h3>
+                  <p className="text-amber-700 dark:text-amber-300 text-sm">
+                    登录后即可免费阅读所有漫画章节，支持收藏、书架等功能
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setShowLoginPrompt(false);
+                    setShowAuthModal(true);
+                  }}
+                  className="px-6 py-2.5 bg-emerald-600 dark:bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-all shadow-sm hover:shadow"
+                >
+                  立即登录 / 注册
+                </button>
+                <button
+                  onClick={() => setShowLoginPrompt(false)}
+                  className="px-4 py-2.5 text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 font-medium transition-all"
+                >
+                  暂不登录
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Breadcrumb */}
         <div className="mb-6 text-sm text-gray-600 dark:text-gray-400">
           <Link href="/" className="hover:text-purple-600 dark:hover:text-purple-400 transition">
@@ -301,13 +346,19 @@ export default function MangaDetailPage({
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3 pt-2">
-                <Link
-                  href={`/read/${manga.chapters[0]?.id || ''}`}
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      setShowAuthModal(true);
+                      return;
+                    }
+                    window.location.href = `/read/${manga.chapters[0]?.id || ''}`;
+                  }}
                   className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2"
                 >
                   <span>📖</span>
                   <span>开始阅读</span>
-                </Link>
+                </button>
                 <button
                   onClick={handleFavorite}
                   disabled={isFavoriting}
@@ -424,10 +475,16 @@ export default function MangaDetailPage({
                 <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">共 {manga.chapters.length} 话</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {manga.chapters.map((chapter, index) => (
-                    <Link
+                    <div
                       key={chapter.id}
-                      href={`/read/${chapter.id}`}
-                      className="flex items-center justify-between p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all group bg-white dark:bg-zinc-800"
+                      onClick={() => {
+                        if (!user) {
+                          setShowAuthModal(true);
+                          return;
+                        }
+                        window.location.href = `/read/${chapter.id}`;
+                      }}
+                      className="flex items-center justify-between p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all group bg-white dark:bg-zinc-800 cursor-pointer"
                     >
                       <div className="flex items-center gap-4 flex-1">
                         <div className="text-2xl font-bold text-zinc-300 dark:text-zinc-600 w-12 text-center group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
@@ -445,7 +502,7 @@ export default function MangaDetailPage({
                       <div className="text-zinc-400 dark:text-zinc-600 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:translate-x-1 transition-all text-xl">
                         →
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>

@@ -40,43 +40,36 @@ export async function POST(request: NextRequest) {
       sessionValue: sessionCookie ? sessionCookie.value.substring(0, 20) + '...' : 'none'
     });
 
-    if (!sessionCookie) {
-      logSuspiciousActivity(request, 'image_token_no_session', {}, 'warning');
-      console.warn('[Image Tokens Batch] No session cookie found');
-      return NextResponse.json(
-        { success: false, error: '请先登录' },
-        { status: 401 }
-      );
+    let userId: string | null = null;
+
+    if (sessionCookie) {
+      userId = getSessionUserId(sessionCookie.value);
+
+      console.log('[Image Tokens Batch] Session validation:', {
+        userId,
+        hasUserId: !!userId
+      });
+
+      if (userId) {
+        const user = findUserById(userId);
+        if (!user) {
+          console.warn('[Image Tokens Batch] User not found:', userId);
+          userId = null; // 用户不存在，当作未登录处理
+        } else {
+          console.log('[Image Tokens Batch] User authenticated:', {
+            userId,
+            username: user.username
+          });
+        }
+      }
     }
 
-    const userId = getSessionUserId(sessionCookie.value);
-
-    console.log('[Image Tokens Batch] Session validation:', {
-      userId,
-      hasUserId: !!userId
-    });
-
+    // 未登录用户也可以获取 token（用于浏览主页）
+    // 使用一个特殊的匿名用户ID
     if (!userId) {
-      console.warn('[Image Tokens Batch] Invalid session - no userId extracted');
-      return NextResponse.json(
-        { success: false, error: '登录已过期,请重新登录' },
-        { status: 401 }
-      );
+      userId = 'anonymous';
+      console.log('[Image Tokens Batch] Allowing anonymous access');
     }
-
-    const user = findUserById(userId);
-    if (!user) {
-      console.warn('[Image Tokens Batch] User not found:', userId);
-      return NextResponse.json(
-        { success: false, error: '用户不存在' },
-        { status: 401 }
-      );
-    }
-
-    console.log('[Image Tokens Batch] User authenticated:', {
-      userId,
-      username: user.username
-    });
 
     // 获取请求的图片路径列表
     const { imagePaths } = await request.json();

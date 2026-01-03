@@ -1877,3 +1877,5 @@
 {"timestamp":1767354749650,"level":"info","type":"image_token_generated","ipAddress":"::1","userId":"user-1767144458675","details":{"imagePath":"/api/images/机器翻译求生机/7.jpg"}}
 {"timestamp":1767354749651,"level":"info","type":"image_token_generated","ipAddress":"::1","userId":"user-1767144458675","details":{"imagePath":"/api/images/机器翻译求生机/7.jpg"}}
 {"timestamp":1767354749652,"level":"info","type":"image_token_generated","ipAddress":"::1","userId":"user-1767144458675","details":{"imagePath":"/api/images/机器翻译求生机/7.jpg"}}
+{"timestamp":1767408674658,"level":"info","type":"image_tokens_batch_generated","ipAddress":"::1","userId":"user-1767144458675","details":{"count":12}}
+{"timestamp":1767408677893,"level":"info","type":"image_tokens_batch_generated","ipAddress":"::1","userId":"anonymous","details":{"count":12}}
