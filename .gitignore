@@ -16,10 +16,13 @@
 # next.js
 /.next/
 /out/
+.standalone/
 .venv
+
 # production
 /build
 venv
+
 # misc
 .DS_Store
 *.pem
@@ -32,6 +35,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -51,3 +55,11 @@ data/**/*.wmv
 data/**/*.m4v
 data/**/*.mpeg
 data/**/*.mpg
+
+# PM2 logs
+/logs/
+*.log
+pm2*.log
+
+# PM2 runtime
+.pm2/
