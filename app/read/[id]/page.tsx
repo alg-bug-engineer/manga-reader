@@ -72,6 +72,66 @@ export default function ReaderPage({
     return url;
   };
 
+  // 批量获取图片 token（优化移动端性能）
+  const batchGetImageUrls = async (imagePaths: string[]): Promise<Map<string, string>> => {
+    // 过滤掉已经有缓存的路径
+    const uncachedPaths = imagePaths.filter(path => !imageUrls.has(path));
+
+    if (uncachedPaths.length === 0) {
+      return imageUrls;
+    }
+
+    try {
+      console.log(`[Batch] Fetching tokens for ${uncachedPaths.length} images`);
+
+      const response = await fetch('/api/images/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagePaths: uncachedPaths }),
+      });
+
+      if (!response.ok) {
+        const error = new Error(`HTTP ${response.status}`);
+        (error as any).status = response.status;
+        throw error;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.tokens) {
+        const urlMap = new Map(imageUrls);
+
+        for (const [path, token] of Object.entries(data.tokens)) {
+          const cleanPath = path.replace('/api/images/', '');
+          const url = `/api/images/${cleanPath}?token=${token}`;
+          urlMap.set(path, url);
+        }
+
+        setImageUrls(urlMap);
+        console.log(`[Batch] Successfully cached ${Object.keys(data.tokens).length} tokens`);
+        return urlMap;
+      }
+
+      return imageUrls;
+    } catch (error: any) {
+      console.error('[Batch] Failed to fetch tokens:', error);
+      // 批量失败不影响单个图片加载，后续会逐个重试
+      return imageUrls;
+    }
+  };
+
+  // 在条漫模式下，预加载所有图片的 token
+  useEffect(() => {
+    if (!chapter || mode !== 'strip') return;
+
+    const preloadTokens = async () => {
+      console.log(`[Reader] Preloading tokens for ${chapter.pages.length} pages in strip mode`);
+      await batchGetImageUrls(chapter.pages);
+    };
+
+    preloadTokens();
+  }, [chapter, mode]);
+
   // TokenizedImage 组件 - 自动处理带token的图片加载
   function TokenizedImage({
     imagePath,
@@ -88,15 +148,18 @@ export default function ReaderPage({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
+    const [errorMessage, setErrorMessage] = useState<string>('');
 
     useEffect(() => {
       let cancelled = false;
 
       async function loadUrl(retry = false) {
         try {
-          // 如果是重试，延迟一下再请求
+          // 如果是重试，延迟一下再请求（指数退避）
           if (retry) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * Math.min(retryCount, 5)));
+            const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // 最大10秒
+            console.log(`[TokenizedImage] Retrying (${retryCount + 1}/5) for ${imagePath} after ${delay}ms`);
+            await new Promise(resolve => setTimeout(resolve, delay));
           }
 
           const tokenizedUrl = await getCachedImageUrl(imagePath);
@@ -104,22 +167,44 @@ export default function ReaderPage({
             setUrl(tokenizedUrl);
             setLoading(false);
             setError(false);
+            setErrorMessage('');
+            console.log(`[TokenizedImage] Successfully loaded: ${imagePath}`);
           }
         } catch (err: any) {
-          console.error('Failed to load image URL:', err);
+          console.error('[TokenizedImage] Failed to load image URL:', {
+            imagePath,
+            error: err?.message,
+            status: err?.status,
+            retryCount
+          });
 
-          // 如果是429错误（频率限制），自动重试
-          if (err?.message?.includes('429') || err?.status === 429) {
-            if (retryCount < 3) {
-              // 重试
-              setRetryCount(prev => prev + 1);
-              return;
-            }
+          // 扩展重试条件：包括 401, 429, 500, 502, 503 等错误
+          const shouldRetry = [401, 429, 500, 502, 503].includes(err?.status) ||
+                            err?.message?.includes('429') ||
+                            err?.message?.includes('50') ||
+                            err?.message?.includes('401') ||
+                            err?.name === 'TypeError' || // 网络错误
+                            !err?.status; // 未知错误也尝试重试
+
+          if (shouldRetry && retryCount < 5) {
+            console.log(`[TokenizedImage] Scheduling retry ${retryCount + 1}/5 for ${imagePath}`);
+            setRetryCount(prev => prev + 1);
+            return;
           }
 
           if (!cancelled) {
             setLoading(false);
             setError(true);
+            // 显示用户友好的错误信息
+            if (err?.status === 401) {
+              setErrorMessage('认证失败');
+            } else if (err?.status === 429) {
+              setErrorMessage('请求过于频繁');
+            } else if (err?.message?.includes('fetch')) {
+              setErrorMessage('网络连接失败');
+            } else {
+              setErrorMessage(`加载失败 (${err?.status || '网络错误'})`);
+            }
           }
         }
       }
@@ -134,29 +219,45 @@ export default function ReaderPage({
     // 加载状态
     if (loading) {
       return (
-        <div className={`flex items-center justify-center bg-gray-100 ${className}`} style={style}>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
+        <div className={`flex items-center justify-center bg-gray-100 ${className || ''}`} style={style}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
+            {retryCount > 0 && (
+              <div className="text-xs text-gray-500 mt-2">
+                正在重试... ({retryCount}/5)
+              </div>
+            )}
+          </div>
         </div>
       );
     }
 
-    // 错误状态
+    // 错误状态 - 显示更详细的错误信息
     if (error) {
       return (
         <div
-          className={`flex items-center justify-center bg-gray-100 ${className}`}
+          className={`flex items-center justify-center bg-gray-100 ${className || ''}`}
           style={style}
           onClick={() => {
+            console.log(`[TokenizedImage] Manual retry triggered for ${imagePath}`);
             setRetryCount(0);
             setError(false);
+            setErrorMessage('');
             setLoading(true);
           }}
           title="点击重试"
         >
-          <div className="text-center text-gray-500">
-            <div className="text-2xl mb-1">⚠️</div>
-            <div className="text-xs">加载失败</div>
-            <div className="text-xs">点击重试</div>
+          <div className="text-center text-gray-500 p-4">
+            <div className="text-3xl mb-2">⚠️</div>
+            <div className="text-sm font-medium">图片加载失败</div>
+            {errorMessage && (
+              <div className="text-xs text-red-500 mt-2 px-3 py-1 bg-red-50 rounded-md inline-block">
+                {errorMessage}
+              </div>
+            )}
+            <div className="text-xs text-gray-400 mt-3">
+              点击图片重试
+            </div>
           </div>
         </div>
       );
@@ -176,9 +277,18 @@ export default function ReaderPage({
           e.preventDefault();
           e.stopPropagation();
         }}
-        onError={() => {
+        onLoad={() => {
+          console.log(`[TokenizedImage] Image element loaded successfully: ${imagePath}`);
+        }}
+        onError={(e) => {
+          console.error('[TokenizedImage] Image element failed to load:', {
+            imagePath,
+            url,
+            error: e
+          });
           // 图片加载失败时的处理
           setError(true);
+          setErrorMessage('图片渲染失败');
         }}
       />
     );
@@ -306,6 +416,18 @@ export default function ReaderPage({
       currentPage + preloadCount,
     ].filter(i => i >= 0 && i < totalPages);
 
+    // 批量预加载 tokens
+    const preloadPaths = preloadRange
+      .filter(index => index >= 0 && index < chapter.pages.length)
+      .map(index => chapter.pages[index]);
+
+    if (preloadPaths.length > 0) {
+      batchGetImageUrls(preloadPaths).then(() => {
+        console.log(`[Preload] Tokens prefetched for ${preloadPaths.length} pages`);
+      });
+    }
+
+    // 预加载图片到内存
     const newPreloaded = new Map(preloadedImages);
 
     preloadRange.forEach(pageIndex => {

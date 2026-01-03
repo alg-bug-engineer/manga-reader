@@ -148,12 +148,22 @@ export async function POST(request: NextRequest) {
       success: true,
       tokens,
       expiresIn: 300, // 5分钟(秒)
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=300', // 5分钟缓存
+        'X-Content-Type-Options': 'nosniff',
+      },
     });
   } catch (error) {
     console.error('Batch generate image tokens error:', error);
     return NextResponse.json(
       { success: false, error: '批量生成令牌失败' },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'X-Content-Type-Options': 'nosniff',
+        },
+      }
     );
   }
 }
