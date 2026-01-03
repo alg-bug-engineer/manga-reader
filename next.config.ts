@@ -46,9 +46,6 @@ const nextConfig: NextConfig = {
 
   // React 严格模式
   reactStrictMode: true,
-
-  // SWC 压缩
-  swcMinify: true,
 };
 
 export default nextConfig;
