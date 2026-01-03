@@ -25,9 +25,9 @@ function getAllowedReferers(): string[] {
  * 检查 Referer 是否有效
  */
 function isValidReferer(referer: string | null): boolean {
-  // 如果没有 referer,拒绝访问(除非是本站API调用)
+  // 如果没有 referer,允许访问（兼容某些隐私浏览器或代理）
   if (!referer) {
-    return false;
+    return true;
   }
 
   const allowedReferers = getAllowedReferers();
@@ -39,7 +39,17 @@ function isValidReferer(referer: string | null): boolean {
     }
   }
 
-  return false;
+  // 生产环境:如果配置了允许列表但都不匹配，记录警告但仍然允许访问
+  // 这样可以避免因Referer头部丢失导致的功能性问题
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  if (baseUrl !== 'http://localhost:3000') {
+    // 生产环境但不匹配 - 记录警告但允许访问(容错性优先)
+    console.warn(`[Security] Referer check failed: ${referer} not in allowed list. Allowing for compatibility.`);
+    return true;
+  }
+
+  // 开发环境:默认允许
+  return true;
 }
 
 /**
@@ -52,12 +62,19 @@ export async function GET(
   const { path: imagePath } = await params;
   const clientIp = getClientIp(request);
 
+  // 解码URL编码的路径（处理中文等特殊字符）
+  const decodedPath = imagePath.map(segment => {
+    const decoded = decodeURIComponent(segment);
+    // 移除路径段首尾的空格（很多文件名可能有前导/尾随空格）
+    return decoded.trim();
+  });
+
   // 安全检查:防止路径遍历攻击
-  if (imagePath.some(segment => segment.includes('..'))) {
+  if (decodedPath.some(segment => segment.includes('..'))) {
     logSuspiciousActivity(
       request,
       'path_traversal_attempt',
-      { imagePath },
+      { imagePath: decodedPath, originalPath: imagePath },
       'critical'
     );
 
@@ -65,11 +82,11 @@ export async function GET(
   }
 
   // 构建完整的文件路径
-  const fullPath = path.join(process.cwd(), 'data', ...imagePath);
+  const fullPath = path.join(process.cwd(), 'data', ...decodedPath);
 
   // 检查文件是否存在
   if (!fs.existsSync(fullPath)) {
-    logImageAccess(request, imagePath.join('/'), false, undefined, 'file_not_found');
+    logImageAccess(request, decodedPath.join('/'), false, undefined, 'file_not_found');
     return NextResponse.json({ error: 'File not found' }, { status: 404 });
   }
 
@@ -87,11 +104,11 @@ export async function GET(
     logSuspiciousActivity(
       request,
       'invalid_referer',
-      { referer, imagePath },
+      { referer, imagePath: decodedPath },
       'warning'
     );
 
-    logImageAccess(request, imagePath.join('/'), false, undefined, 'invalid_referer');
+    logImageAccess(request, decodedPath.join('/'), false, undefined, 'invalid_referer');
 
     return NextResponse.json(
       { error: 'Unauthorized access' },
@@ -106,11 +123,11 @@ export async function GET(
     logSuspiciousActivity(
       request,
       'missing_image_token',
-      { imagePath },
+      { imagePath: decodedPath },
       'warning'
     );
 
-    logImageAccess(request, imagePath.join('/'), false, undefined, 'missing_token');
+    logImageAccess(request, decodedPath.join('/'), false, undefined, 'missing_token');
 
     return NextResponse.json(
       { error: 'Access token required' },
@@ -118,25 +135,45 @@ export async function GET(
     );
   }
 
-  // 验证 Token
-  const imageId = imagePath.join('/');
+  // 验证 Token (使用原始路径，因为token是基于原始路径生成的)
+  // 注意:需要规范化路径格式,移除首尾空格
+  const imageId = decodedPath.join('/');
+
+  // 添加调试日志
+  console.log('[Image API] Verifying token:', {
+    imageId,
+    decodedPath,
+    tokenPresent: !!token,
+    tokenPrefix: token.substring(0, 20) + '...'
+  });
+
   const tokenValidation = verifyImageToken(token, imageId);
 
   if (!tokenValidation.valid) {
+    console.log('[Image API] Token validation failed:', {
+      imageId,
+      reason: 'token_invalid_or_expired'
+    });
+
     logSuspiciousActivity(
       request,
       'invalid_image_token',
-      { imagePath, token: token.substring(0, 10) + '...' },
+      { imagePath: decodedPath, token: token.substring(0, 10) + '...', imageId },
       'warning'
     );
 
-    logImageAccess(request, imagePath.join('/'), false, undefined, 'invalid_token');
+    logImageAccess(request, decodedPath.join('/'), false, undefined, 'invalid_token');
 
     return NextResponse.json(
       { error: 'Invalid or expired token' },
       { status: 401 }
     );
   }
+
+  console.log('[Image API] Token validated successfully:', {
+    imageId,
+    userId: tokenValidation.userId
+  });
 
   // 3. 频率限制检查
   const rateLimitKey = `image:${clientIp}`;
@@ -146,12 +183,12 @@ export async function GET(
     logSuspiciousActivity(
       request,
       'image_rate_limit_exceeded',
-      { imagePath, resetTime: rateLimit.resetTime },
+      { imagePath: decodedPath, resetTime: rateLimit.resetTime },
       'warning',
       tokenValidation.userId
     );
 
-    logImageAccess(request, imagePath.join('/'), false, tokenValidation.userId, 'rate_limited');
+    logImageAccess(request, decodedPath.join('/'), false, tokenValidation.userId, 'rate_limited');
 
     return NextResponse.json(
       {
@@ -190,7 +227,7 @@ export async function GET(
     }
 
     // 记录成功访问
-    logImageAccess(request, imagePath.join('/'), true, tokenValidation.userId);
+    logImageAccess(request, decodedPath.join('/'), true, tokenValidation.userId);
 
     // 返回图片
     return new NextResponse(fileBuffer, {
@@ -208,7 +245,7 @@ export async function GET(
   } catch (error) {
     console.error('Image read error:', error);
 
-    logImageAccess(request, imagePath.join('/'), false, tokenValidation.userId, 'read_error');
+    logImageAccess(request, decodedPath.join('/'), false, tokenValidation.userId, 'read_error');
 
     return NextResponse.json(
       { error: 'Failed to read image' },

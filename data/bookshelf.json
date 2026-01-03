@@ -20,5 +20,38 @@
     "id": "1767350203725-vpus2x9uv",
     "addedAt": "2026-01-02T10:36:43.725Z",
     "updatedAt": "2026-01-02T10:36:43.725Z"
+  },
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-7",
+    "mangaTitle": "强化学习求生记",
+    "mangaCover": "/api/images/强化学习求生记/ 封面.jpg",
+    "author": "芝士AI吃鱼",
+    "status": "reading",
+    "id": "1767351355424-r88dt3ihy",
+    "addedAt": "2026-01-02T10:55:55.424Z",
+    "updatedAt": "2026-01-02T10:55:55.424Z"
+  },
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-10",
+    "mangaTitle": "机器翻译求生机",
+    "mangaCover": "/api/images/机器翻译求生机/封面.jpg",
+    "author": "芝士AI吃鱼",
+    "status": "reading",
+    "id": "1767352638956-uti423238",
+    "addedAt": "2026-01-02T11:17:18.956Z",
+    "updatedAt": "2026-01-02T11:17:18.956Z"
+  },
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-11",
+    "mangaTitle": "赛博狗仔翻车记",
+    "mangaCover": "/api/images/赛博狗仔翻车记/封面.jpg",
+    "author": "芝士AI吃鱼",
+    "status": "reading",
+    "id": "1767353922670-dha7dq9z0",
+    "addedAt": "2026-01-02T11:38:42.670Z",
+    "updatedAt": "2026-01-02T11:38:42.670Z"
   }
 ]

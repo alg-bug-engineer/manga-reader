@@ -97,13 +97,13 @@ export function getRateLimitStats(identifier: string): { count: number; resetTim
 
 // 图片访问的频率限制配置
 export const IMAGE_RATE_LIMITS: RateLimitConfig = {
-  maxRequests: 300, // 每分钟最多300次（提高限制以支持批量加载）
+  maxRequests: 600, // 每分钟最多600次（10次/秒，足够支持页面加载）
   windowMs: 60000, // 1分钟
 };
 
-// 图片token生成的频率限制配置（专门用于批量获取token）
+// 图片token生成的频率限制配置（单个token）
 export const IMAGE_TOKEN_RATE_LIMITS: RateLimitConfig = {
-  maxRequests: 200, // 每分钟最多200次
+  maxRequests: 300, // 每分钟最多300次（提高到5次/秒）
   windowMs: 60000, // 1分钟
 };
 

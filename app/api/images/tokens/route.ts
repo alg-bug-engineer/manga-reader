@@ -6,24 +6,21 @@ import { checkRateLimit, IMAGE_TOKEN_RATE_LIMITS } from '@/lib/security/rateLimi
 import { getClientIp, logSecurity, logSuspiciousActivity } from '@/lib/security/logger';
 
 /**
- * 生成图片访问令牌
- * POST /api/images/token
- * Body: { imagePath: string }
+ * 批量生成图片访问令牌
+ * POST /api/images/tokens
+ * Body: { imagePaths: string[] }
  */
 export async function POST(request: NextRequest) {
   try {
     const clientIp = getClientIp(request);
 
-    // 频率限制检查
-    const rateLimit = checkRateLimit(`image-token:${clientIp}`, IMAGE_TOKEN_RATE_LIMITS);
-    if (!rateLimit.allowed) {
-      logSuspiciousActivity(
-        request,
-        'image_token_rate_limit',
-        { attempts: rateLimit.remaining },
-        'warning'
-      );
+    // 频率限制检查（批量请求使用更高的限制）
+    const rateLimit = checkRateLimit(`image-token-batch:${clientIp}`, {
+      maxRequests: 100, // 每分钟最多100次批量请求
+      windowMs: 60000,
+    });
 
+    if (!rateLimit.allowed) {
       return NextResponse.json(
         {
           success: false,
@@ -40,7 +37,6 @@ export async function POST(request: NextRequest) {
 
     if (!sessionCookie) {
       logSuspiciousActivity(request, 'image_token_no_session', {}, 'warning');
-
       return NextResponse.json(
         { success: false, error: '请先登录' },
         { status: 401 }
@@ -64,67 +60,71 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 获取请求的图片路径
-    const { imagePath } = await request.json();
+    // 获取请求的图片路径列表
+    const { imagePaths } = await request.json();
 
-    if (!imagePath || typeof imagePath !== 'string') {
+    if (!Array.isArray(imagePaths)) {
       return NextResponse.json(
-        { success: false, error: '无效的图片路径' },
+        { success: false, error: '无效的图片路径列表' },
         { status: 400 }
       );
     }
 
-    // 移除 /api/images/ 前缀（如果存在），确保使用相对路径
-    let cleanImagePath = imagePath.replace(/^\/api\/images\//, '');
-
-    // 规范化路径:移除首尾空格并标准化斜杠
-    cleanImagePath = cleanImagePath.trim().split('/').map(segment => segment.trim()).join('/');
-
-    // 添加调试日志
-    console.log('[Image Token] Generating token:', {
-      originalPath: imagePath,
-      cleanPath: cleanImagePath,
-      userId
-    });
-
-    // 安全检查:防止路径遍历
-    if (cleanImagePath.includes('..')) {
-      logSuspiciousActivity(
-        request,
-        'path_traversal_attempt',
-        { imagePath: cleanImagePath },
-        'critical',
-        userId
-      );
-
+    // 限制每次最多批量获取100个token
+    if (imagePaths.length > 100) {
       return NextResponse.json(
-        { success: false, error: '非法的图片路径' },
+        { success: false, error: '单次请求最多获取100个token' },
         { status: 400 }
       );
     }
 
-    // 生成图片访问令牌(5分钟有效期)
-    const token = generateImageToken(userId, cleanImagePath, 5 * 60 * 1000);
+    // 生成所有token
+    const tokens: Record<string, string> = {};
 
-    // 记录令牌生成
+    for (const imagePath of imagePaths) {
+      if (!imagePath || typeof imagePath !== 'string') {
+        continue;
+      }
+
+      // 移除 /api/images/ 前缀（如果存在），确保使用相对路径
+      const cleanImagePath = imagePath.replace(/^\/api\/images\//, '');
+
+      // 安全检查:防止路径遍历
+      if (cleanImagePath.includes('..')) {
+        logSuspiciousActivity(
+          request,
+          'path_traversal_attempt',
+          { imagePath: cleanImagePath },
+          'critical',
+          userId
+        );
+        continue;
+      }
+
+      // 生成图片访问令牌(5分钟有效期)
+      const token = generateImageToken(userId, cleanImagePath, 5 * 60 * 1000);
+      tokens[cleanImagePath] = token;
+    }
+
+    // 记录令牌批量生成
     logSecurity({
       timestamp: Date.now(),
       level: 'info',
-      type: 'image_token_generated',
+      type: 'image_tokens_batch_generated',
       ipAddress: clientIp,
       userId,
-      details: { imagePath },
+      details: { count: Object.keys(tokens).length },
     });
 
     return NextResponse.json({
       success: true,
-      token,
+      tokens,
       expiresIn: 300, // 5分钟(秒)
     });
   } catch (error) {
-    console.error('Generate image token error:', error);
+    console.error('Batch generate image tokens error:', error);
     return NextResponse.json(
-      { success: false, error: '生成令牌失败' },
+      { success: false, error: '批量生成令牌失败' },
       { status: 500 }
     );
   }

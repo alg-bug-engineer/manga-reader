@@ -25,5 +25,14 @@
     "content": "等等",
     "createdAt": "2025-12-30T03:15:32.089Z",
     "likes": 0
+  },
+  "comment-1767351365511-0u0fditth": {
+    "id": "comment-1767351365511-0u0fditth",
+    "mangaId": "manga-7",
+    "userId": "user-1767144458675",
+    "username": "manga",
+    "content": "非常好！",
+    "createdAt": "2026-01-02T10:56:05.511Z",
+    "likes": 0
   }
 }

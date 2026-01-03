@@ -101,19 +101,15 @@ export default function MangaCard({ manga, index = 0, showLikeButton = false }: 
       >
         {/* Cover Image */}
         <div className="relative aspect-[3/4] overflow-hidden bg-zinc-50 dark:bg-zinc-900">
-          <img
+          <ProtectedImage
             src={manga.coverImage}
             alt={manga.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-            onContextMenu={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDragStart={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
+            imagePath={manga.coverImage.replace(/^\/api\/images\//, '')} // 移除 /api/images/ 前缀
+            width={300}
+            height={400}
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            priority={index < 4} // 前4个图片优先加载
           />
           {/* Status Badge - 结构线风格 */}
           <div className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-medium

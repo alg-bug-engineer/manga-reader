@@ -8,6 +8,8 @@ const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const LIKES_FILE = path.join(DATA_DIR, 'likes.json');
 const BOOKSHELF_FILE = path.join(DATA_DIR, 'bookshelf.json');
 const READING_PROGRESS_FILE = path.join(DATA_DIR, 'reading-progress.json');
+const USER_MANGA_FILE = path.join(DATA_DIR, 'user-manga.json');
+const REVIEW_RECORDS_FILE = path.join(DATA_DIR, 'review-records.json');
 
 // 确保数据目录存在
 export function ensureDataDir() {
@@ -699,5 +701,224 @@ export function getRecentReads(userId: string, limit: number = 10): ReadingProgr
   return progressList
     .sort((a, b) => new Date(b.lastReadAt).getTime() - new Date(a.lastReadAt).getTime())
     .slice(0, limit);
+}
+
+// ==================== 用户上传漫画功能 ====================
+
+export interface UserChapter {
+  id: string;
+  title: string;
+  pages: string[];
+  createdAt: string;
+}
+
+export interface UserManga {
+  id: string;
+  uploaderId: string;
+  title: string;
+  description: string;
+  coverImage: string;
+  categories: string[];
+  tags: string[];
+  status: 'pending' | 'approved' | 'rejected';
+  rejectReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  views: number;
+  likes: number;
+  chapters: UserChapter[];
+}
+
+export interface ReviewRecord {
+  id: string;
+  mangaId: string;
+  reviewerId: string;
+  action: 'approve' | 'reject';
+  reason?: string;
+  reviewedAt: string;
+}
+
+/**
+ * 读取用户上传漫画数据
+ */
+function readUserMangaData(): UserManga[] {
+  try {
+    if (fs.existsSync(USER_MANGA_FILE)) {
+      const data = fs.readFileSync(USER_MANGA_FILE, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error reading user manga file:', error);
+  }
+  return [];
+}
+
+/**
+ * 保存用户上传漫画数据
+ */
+function saveUserMangaData(data: UserManga[]) {
+  try {
+    fs.writeFileSync(USER_MANGA_FILE, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Error saving user manga file:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取所有用户上传漫画
+ */
+export function getAllUserManga(): UserManga[] {
+  return readUserMangaData();
+}
+
+/**
+ * 根据ID获取用户上传漫画
+ */
+export function getUserMangaById(id: string): UserManga | undefined {
+  const data = readUserMangaData();
+  return data.find(manga => manga.id === id);
+}
+
+/**
+ * 获取用户上传的所有漫画
+ */
+export function getUserMangaByUploader(uploaderId: string): UserManga[] {
+  const data = readUserMangaData();
+  return data.filter(manga => manga.uploaderId === uploaderId);
+}
+
+/**
+ * 根据状态获取用户上传漫画
+ */
+export function getUserMangaByStatus(status: UserManga['status']): UserManga[] {
+  const data = readUserMangaData();
+  return data.filter(manga => manga.status === status);
+}
+
+/**
+ * 创建用户上传漫画
+ */
+export function createUserManga(manga: Omit<UserManga, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'likes'>): UserManga {
+  const data = readUserMangaData();
+
+  const newManga: UserManga = {
+    ...manga,
+    id: `user-manga-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    views: 0,
+    likes: 0,
+  };
+
+  data.push(newManga);
+  saveUserMangaData(data);
+  return newManga;
+}
+
+/**
+ * 更新用户上传漫画
+ */
+export function updateUserManga(id: string, updates: Partial<Omit<UserManga, 'id' | 'uploaderId' | 'createdAt'>>): UserManga | null {
+  const data = readUserMangaData();
+  const index = data.findIndex(manga => manga.id === id);
+
+  if (index === -1) {
+    return null;
+  }
+
+  data[index] = {
+    ...data[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  saveUserMangaData(data);
+  return data[index];
+}
+
+/**
+ * 删除用户上传漫画
+ */
+export function deleteUserManga(id: string): boolean {
+  const data = readUserMangaData();
+  const initialLength = data.length;
+  const filtered = data.filter(manga => manga.id !== id);
+
+  if (filtered.length === initialLength) {
+    return false;
+  }
+
+  saveUserMangaData(filtered);
+  return true;
+}
+
+/**
+ * 获取待审核漫画数量
+ */
+export function getPendingMangaCount(): number {
+  const data = readUserMangaData();
+  return data.filter(manga => manga.status === 'pending').length;
+}
+
+// ==================== 审核记录功能 ====================
+
+/**
+ * 读取审核记录数据
+ */
+function readReviewRecordsData(): ReviewRecord[] {
+  try {
+    if (fs.existsSync(REVIEW_RECORDS_FILE)) {
+      const data = fs.readFileSync(REVIEW_RECORDS_FILE, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error reading review records file:', error);
+  }
+  return [];
+}
+
+/**
+ * 保存审核记录数据
+ */
+function saveReviewRecordsData(data: ReviewRecord[]) {
+  try {
+    fs.writeFileSync(REVIEW_RECORDS_FILE, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Error saving review records file:', error);
+    throw error;
+  }
+}
+
+/**
+ * 创建审核记录
+ */
+export function createReviewRecord(record: Omit<ReviewRecord, 'id' | 'reviewedAt'>): ReviewRecord {
+  const data = readReviewRecordsData();
+
+  const newRecord: ReviewRecord = {
+    ...record,
+    id: `review-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    reviewedAt: new Date().toISOString(),
+  };
+
+  data.push(newRecord);
+  saveReviewRecordsData(data);
+  return newRecord;
+}
+
+/**
+ * 获取漫画的审核记录
+ */
+export function getReviewRecordsByManga(mangaId: string): ReviewRecord[] {
+  const data = readReviewRecordsData();
+  return data.filter(record => record.mangaId === mangaId);
+}
+
+/**
+ * 获取所有审核记录
+ */
+export function getAllReviewRecords(): ReviewRecord[] {
+  return readReviewRecordsData();
 }
 

@@ -50,5 +50,31 @@
     "readTime": 3,
     "id": "1767350787152-ap0se3iq9",
     "lastReadAt": "2026-01-02T10:46:27.152Z"
+  },
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-10",
+    "mangaTitle": "机器翻译求生机",
+    "currentChapter": 1,
+    "currentPage": 1,
+    "totalPages": 8,
+    "progressPercentage": 13,
+    "isCompleted": false,
+    "readTime": 3,
+    "id": "1767352634006-g01na6otl",
+    "lastReadAt": "2026-01-02T11:52:32.372Z"
+  },
+  {
+    "userId": "user-1767144458675",
+    "mangaId": "manga-11",
+    "mangaTitle": "赛博狗仔翻车记",
+    "currentChapter": 1,
+    "currentPage": 1,
+    "totalPages": 7,
+    "progressPercentage": 14,
+    "isCompleted": false,
+    "readTime": 3,
+    "id": "1767353927563-tk36tour1",
+    "lastReadAt": "2026-01-02T11:38:47.563Z"
   }
 ]

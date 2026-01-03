@@ -237,18 +237,13 @@ export default function MangaDetailPage({
             {/* Cover Image */}
             <div className="flex-shrink-0 mx-auto md:mx-0">
               <div className="relative w-64 md:w-72 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-                <img
+                <ProtectedImage
                   src={manga.coverImage}
                   alt={manga.title}
+                  imagePath={manga.coverImage.replace(/^\/api\/images\//, '')}
+                  width={288}
+                  height={384}
                   className="w-full h-full object-cover"
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onDragStart={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
                 />
               </div>
             </div>
