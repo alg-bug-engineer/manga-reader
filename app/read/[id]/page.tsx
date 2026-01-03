@@ -91,7 +91,6 @@ export default function ReaderPage({
 
     useEffect(() => {
       let cancelled = false;
-      let timeoutId: NodeJS.Timeout;
 
       async function loadUrl(retry = false) {
         try {
@@ -129,7 +128,6 @@ export default function ReaderPage({
 
       return () => {
         cancelled = true;
-        if (timeoutId) clearTimeout(timeoutId);
       };
     }, [imagePath, retryCount]);
 

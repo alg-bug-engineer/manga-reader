@@ -13,7 +13,7 @@ export default function DebugPage() {
       console.log('Document cookies:', cookies);
 
       const hasSession = cookies.includes('session=');
-      setDebugInfo(prev => ({ ...prev, hasSession, cookies }));
+      setDebugInfo((prev: any) => ({ ...prev, hasSession, cookies }));
 
       // 2. 测试Token API
       const response = await fetch('/api/images/tokens', {
@@ -26,7 +26,7 @@ export default function DebugPage() {
 
       const data = await response.json();
 
-      setDebugInfo(prev => ({
+      setDebugInfo((prev: any) => ({
         ...prev,
         tokenResponse: {
           status: response.status,
@@ -51,7 +51,7 @@ export default function DebugPage() {
 
       const data = await response.json();
 
-      setDebugInfo(prev => ({
+      setDebugInfo((prev: any) => ({
         ...prev,
         singleTokenResponse: {
           status: response.status,

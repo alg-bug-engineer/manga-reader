@@ -493,7 +493,7 @@ export default function ProfilePage() {
                       <div className="flex justify-between items-center py-2 border-b border-zinc-200 dark:border-zinc-700">
                         <span className="text-zinc-600 dark:text-zinc-400">注册时间</span>
                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                          {new Date(user.createdAt).toLocaleString('zh-CN')}
+                          {user.createdAt ? new Date(user.createdAt).toLocaleString('zh-CN') : '未知'}
                         </span>
                       </div>
                     </div>

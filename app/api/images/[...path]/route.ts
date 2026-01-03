@@ -223,7 +223,7 @@ export async function GET(
       // 这里可以根据用户信息添加个性化水印
       // fileBuffer = await addUserWatermark(fileBuffer, username, Date.now());
       // 或者使用通用水印
-      fileBuffer = await addTiledWatermark(fileBuffer, 'Protected', 0.15);
+      fileBuffer = Buffer.from(await addTiledWatermark(fileBuffer, 'Protected', 0.15));
     }
 
     // 记录成功访问
