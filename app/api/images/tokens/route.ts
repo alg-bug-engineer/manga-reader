@@ -35,8 +35,14 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session');
 
+    console.log('[Image Tokens Batch] Checking auth:', {
+      hasSessionCookie: !!sessionCookie,
+      sessionValue: sessionCookie ? sessionCookie.value.substring(0, 20) + '...' : 'none'
+    });
+
     if (!sessionCookie) {
       logSuspiciousActivity(request, 'image_token_no_session', {}, 'warning');
+      console.warn('[Image Tokens Batch] No session cookie found');
       return NextResponse.json(
         { success: false, error: '请先登录' },
         { status: 401 }
@@ -45,7 +51,13 @@ export async function POST(request: NextRequest) {
 
     const userId = getSessionUserId(sessionCookie.value);
 
+    console.log('[Image Tokens Batch] Session validation:', {
+      userId,
+      hasUserId: !!userId
+    });
+
     if (!userId) {
+      console.warn('[Image Tokens Batch] Invalid session - no userId extracted');
       return NextResponse.json(
         { success: false, error: '登录已过期,请重新登录' },
         { status: 401 }
@@ -54,11 +66,17 @@ export async function POST(request: NextRequest) {
 
     const user = findUserById(userId);
     if (!user) {
+      console.warn('[Image Tokens Batch] User not found:', userId);
       return NextResponse.json(
         { success: false, error: '用户不存在' },
         { status: 401 }
       );
     }
+
+    console.log('[Image Tokens Batch] User authenticated:', {
+      userId,
+      username: user.username
+    });
 
     // 获取请求的图片路径列表
     const { imagePaths } = await request.json();
@@ -78,6 +96,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 添加调试日志
+    console.log('[Image Tokens Batch] Request received:', {
+      userId,
+      pathsCount: imagePaths.length,
+      firstPath: imagePaths[0]
+    });
+
     // 生成所有token
     const tokens: Record<string, string> = {};
 
@@ -87,7 +112,10 @@ export async function POST(request: NextRequest) {
       }
 
       // 移除 /api/images/ 前缀（如果存在），确保使用相对路径
-      const cleanImagePath = imagePath.replace(/^\/api\/images\//, '');
+      let cleanImagePath = imagePath.replace(/^\/api\/images\//, '');
+
+      // 规范化路径:移除首尾空格并标准化斜杠
+      cleanImagePath = cleanImagePath.trim().split('/').map(segment => segment.trim()).join('/');
 
       // 安全检查:防止路径遍历
       if (cleanImagePath.includes('..')) {
@@ -98,6 +126,7 @@ export async function POST(request: NextRequest) {
           'critical',
           userId
         );
+        console.warn('[Image Tokens Batch] Skipping path with ..:', cleanImagePath);
         continue;
       }
 
@@ -105,6 +134,12 @@ export async function POST(request: NextRequest) {
       const token = generateImageToken(userId, cleanImagePath, 5 * 60 * 1000);
       tokens[cleanImagePath] = token;
     }
+
+    console.log('[Image Tokens Batch] Generated tokens:', {
+      userId,
+      count: Object.keys(tokens).length,
+      sampleKeys: Object.keys(tokens).slice(0, 3)
+    });
 
     // 记录令牌批量生成
     logSecurity({
