@@ -111,7 +111,8 @@ export default function DebugPage() {
             <div className="border-l-4 border-yellow-400 pl-4">
               <h3 className="font-semibold">401 Unauthorized</h3>
               <p className="text-gray-600">
-                原因: 未登录或Session过期<br />
+                原因: 未登录或Session过期
+                <br />
                 解决: 重新登录系统
               </p>
             </div>
@@ -119,7 +120,8 @@ export default function DebugPage() {
             <div className="border-l-4 border-blue-400 pl-4">
               <h3 className="font-semibold">Cookie未设置</h3>
               <p className="text-gray-600">
-                检查浏览器控制台的Application > Cookies<br />
+                检查浏览器控制台的Application {'>'} Cookies
+                <br />
                 确认域名是否正确
               </p>
             </div>
@@ -127,7 +129,8 @@ export default function DebugPage() {
             <div className="border-l-4 border-green-400 pl-4">
               <h3 className="font-semibold">Token验证失败</h3>
               <p className="text-gray-600">
-                检查服务器日志: pm2 logs manga-reader<br />
+                检查服务器日志: pm2 logs manga-reader
+                <br />
                 查找 "[Image Tokens Batch]" 或 "[Image Token]" 日志
               </p>
             </div>
