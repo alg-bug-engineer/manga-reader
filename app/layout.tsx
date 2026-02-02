@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import "./image-protection.css";
 import "./fonts.css";
@@ -26,6 +27,18 @@ export default function RootLayout({
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-LH50LSN47W"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-LH50LSN47W');
+          `}
+        </Script>
       </body>
     </html>
   );
