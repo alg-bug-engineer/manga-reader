@@ -453,6 +453,11 @@ export default function Home() {
               <p className="text-zinc-400 text-sm">
                 © 2025 芝士AI吃鱼 · Made with ❤️ for AI Education
               </p>
+              <p className="text-zinc-400 text-sm mt-2">
+                <a href="http://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                  鲁ICP备2024085839号
+                </a>
+              </p>
             </div>
           </div>
         </div>
